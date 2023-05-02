@@ -250,7 +250,10 @@ impl IntoPy<PyObject> for Wrap<AnyValue<'_>> {
             }
             AnyValue::Date(v) => {
                 let convert = utils.getattr("_to_python_date").unwrap();
-                convert.call1((v,)).unwrap().into_py(py)
+                match convert.call1((v,)) {
+                    Ok(out) => out.into_py(py),
+                    Err(e) => e.into_py(py),
+                }
             }
             AnyValue::Datetime(v, time_unit, time_zone) => {
                 let convert = utils.getattr("_to_python_datetime").unwrap();

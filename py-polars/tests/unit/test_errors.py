@@ -586,3 +586,11 @@ def test_no_sorted_warning(capfd: typing.Any) -> None:
     df.groupby_dynamic("dt", every="1h").agg(pl.all().count().suffix("_foo"))
     (_, err) = capfd.readouterr()
     assert "argument in operation 'groupby_dynamic' is not explicitly sorted" in err
+
+
+def test_conversion_to_invalid_python_date() -> None:
+    s = pl.Series([date(9999, 12, 31)]).dt.offset_by("1d")
+    with pytest.raises(
+        OverflowError,
+    ):
+        s.item()
