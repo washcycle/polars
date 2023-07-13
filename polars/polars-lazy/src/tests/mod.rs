@@ -46,16 +46,24 @@ use polars_plan::logical_plan::{
 use crate::dsl::pearson_corr;
 use crate::prelude::*;
 
-static GLOB_PARQUET: &str = "../../examples/datasets/*.parquet";
-static GLOB_CSV: &str = "../../examples/datasets/*.csv";
-static GLOB_IPC: &str = "../../examples/datasets/*.ipc";
-static FOODS_CSV: &str = "../../examples/datasets/foods1.csv";
-static FOODS_IPC: &str = "../../examples/datasets/foods1.ipc";
-static FOODS_PARQUET: &str = "../../examples/datasets/foods1.parquet";
+macro_rules! dataset {
+    ($fname:expr) => {
+        concat!(
+            env!("CARGO_MANIFEST_DIR"),
+            "/../../examples/datasets/",
+            $fname
+        )
+    };
+}
+pub(crate) use dataset;
+
+static FOODS_CSV: &str = dataset!("foods1.csv");
+static FOODS_IPC: &str = dataset!("foods1.ipc");
+static FOODS_PARQUET: &str = dataset!("foods1.parquet");
 
 #[cfg(feature = "csv")]
 fn scan_foods_csv() -> LazyFrame {
-    LazyCsvReader::new(FOODS_CSV).finish().unwrap()
+    LazyCsvReader::new(dataset!("foods1.csv")).finish().unwrap()
 }
 
 #[cfg(feature = "ipc")]
@@ -65,10 +73,7 @@ fn scan_foods_ipc() -> LazyFrame {
 }
 
 fn init_files() {
-    for path in &[
-        "../../examples/datasets/foods1.csv",
-        "../../examples/datasets/foods2.csv",
-    ] {
+    for path in [dataset!("foods1.csv"), dataset!("foods2.csv")] {
         for ext in [".parquet", ".ipc", ".ndjson"] {
             let out_path = path.replace(".csv", ext);
 
@@ -102,7 +107,6 @@ fn init_files() {
 #[cfg(feature = "parquet")]
 fn scan_foods_parquet(parallel: bool) -> LazyFrame {
     init_files();
-    let out_path = FOODS_PARQUET;
     let parallel = if parallel {
         ParallelStrategy::Auto
     } else {
@@ -116,7 +120,7 @@ fn scan_foods_parquet(parallel: bool) -> LazyFrame {
         rechunk: true,
         ..Default::default()
     };
-    LazyFrame::scan_parquet(out_path, args).unwrap()
+    LazyFrame::scan_parquet(FOODS_PARQUET, args).unwrap()
 }
 
 pub(crate) fn fruits_cars() -> DataFrame {

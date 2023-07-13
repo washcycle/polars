@@ -4,7 +4,7 @@
 use super::*;
 
 const fn base_path() -> &'static str {
-    "../../examples/datasets/tpc_heads"
+    dataset!("tpc_heads")
 }
 
 fn region() -> LazyFrame {

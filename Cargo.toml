@@ -9,6 +9,7 @@ members = [
 ]
 exclude = [
   "examples/datasets",
+  "examples/python_rust_compiled_function",
 ]
 
 
