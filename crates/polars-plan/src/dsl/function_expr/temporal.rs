@@ -208,6 +208,53 @@ pub(super) fn temporal_range_dispatch(
     let stop = &s[1];
 
     polars_ensure!(
+        start.len() == 1 && stop.len() == 1,
+        ComputeError: "'start' and 'stop' both be of length 1 - perhaps you want to use 'date_ranges' or 'time_ranges' instead?",
+    );
+    const TO_MS: i64 = SECONDS_IN_DAY * 1000;
+
+    let rng_start = start.to_physical_repr();
+    let rng_stop = stop.to_physical_repr();
+    let dtype = start.dtype();
+
+    let mut start = rng_start.cast(&DataType::Int64)?;
+    let mut stop = rng_stop.cast(&DataType::Int64)?;
+
+    let (tu, tz) = match dtype {
+        DataType::Date => {
+            start = &start * TO_MS;
+            stop = &stop * TO_MS;
+            (TimeUnit::Milliseconds, None)
+        }
+        DataType::Datetime(tu, tz) => (*tu, tz.as_ref()),
+        DataType::Time => (TimeUnit::Nanoseconds, None),
+        _ => unimplemented!(),
+    };
+    let start = start.get(0).unwrap().extract::<i64>().unwrap();
+    let stop = stop.get(0).unwrap().extract::<i64>().unwrap();
+
+    let res = match dtype {
+        DataType::Date => date_range_impl(name, start, stop, every, closed, tu, tz)?,
+        DataType::Datetime(_, _) | DataType::Time => {
+            date_range_impl(name, start, stop, every, closed, tu, tz)?
+        }
+        _ => unimplemented!(),
+    };
+    Ok(res.cast(dtype).unwrap().into_series())
+}
+
+pub(super) fn temporal_ranges_dispatch(
+    s: &[Series],
+    name: &str,
+    every: Duration,
+    closed: ClosedWindow,
+    time_unit: Option<TimeUnit>,
+    time_zone: Option<TimeZone>,
+) -> PolarsResult<Series> {
+    let start = &s[0];
+    let stop = &s[1];
+
+    polars_ensure!(
         start.len() == stop.len(),
         ComputeError: "'start' and 'stop' should have the same length",
     );

@@ -69,7 +69,7 @@ impl FunctionExpr {
                     } => {
                         // output dtype may change based on `every`, `time_unit`, and `time_zone`
                         let inner_dtype =
-                            mapper.map_to_date_range_dtype(every, time_unit, time_zone)?;
+                            mapper.map_to_datetime_range_dtype(every, time_unit, time_zone)?;
                         return Ok(Field::new("date", DataType::List(Box::new(inner_dtype))));
                     }
                     DateRanges {
@@ -80,13 +80,37 @@ impl FunctionExpr {
                     } => {
                         // output dtype may change based on `every`, `time_unit`, and `time_zone`
                         let inner_dtype =
-                            mapper.map_to_date_range_dtype(every, time_unit, time_zone)?;
+                            mapper.map_to_datetime_range_dtype(every, time_unit, time_zone)?;
                         return Ok(Field::new(
                             "date_range",
                             DataType::List(Box::new(inner_dtype)),
                         ));
                     }
-
+                    DatetimeRange {
+                        every,
+                        closed: _,
+                        time_unit,
+                        time_zone,
+                    } => {
+                        // output dtype may change based on `every`, `time_unit`, and `time_zone`
+                        let dtype =
+                            mapper.map_to_datetime_range_dtype(every, time_unit, time_zone)?;
+                        return Ok(Field::new("datetime", dtype));
+                    }
+                    DatetimeRanges {
+                        every,
+                        closed: _,
+                        time_unit,
+                        time_zone,
+                    } => {
+                        // output dtype may change based on `every`, `time_unit`, and `time_zone`
+                        let inner_dtype =
+                            mapper.map_to_datetime_range_dtype(every, time_unit, time_zone)?;
+                        return Ok(Field::new(
+                            "datetime_range",
+                            DataType::List(Box::new(inner_dtype)),
+                        ));
+                    }
                     TimeRange { .. } => {
                         return Ok(Field::new("time", DataType::List(Box::new(DataType::Time))));
                     }
@@ -378,7 +402,7 @@ impl<'a> FieldsMapper<'a> {
     }
 
     #[cfg(feature = "temporal")]
-    pub(super) fn map_to_date_range_dtype(
+    pub(super) fn map_to_datetime_range_dtype(
         &self,
         every: &Duration,
         time_unit: &Option<TimeUnit>,
