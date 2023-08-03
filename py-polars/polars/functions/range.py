@@ -702,10 +702,7 @@ def datetime_range(
     interval: str | timedelta = ...,
     *,
     closed: ClosedInterval = ...,
-    time_unit: TimeUnit | None = ...,
-    time_zone: str | None = ...,
     eager: Literal[False] = ...,
-    name: str | None = ...,
 ) -> Expr:
     ...
 
@@ -717,8 +714,6 @@ def datetime_range(
     interval: str | timedelta = ...,
     *,
     closed: ClosedInterval = ...,
-    time_unit: TimeUnit | None = ...,
-    time_zone: str | None = ...,
     eager: Literal[True],
 ) -> Series:
     ...
@@ -731,8 +726,6 @@ def datetime_range(
     interval: str | timedelta = ...,
     *,
     closed: ClosedInterval = ...,
-    time_unit: TimeUnit | None = ...,
-    time_zone: str | None = ...,
     eager: bool,
 ) -> Series | Expr:
     ...
@@ -744,8 +737,6 @@ def datetime_range(
     interval: str | timedelta = "1d",
     *,
     closed: ClosedInterval = "both",
-    time_unit: TimeUnit | None = None,
-    time_zone: str | None = None,
     eager: bool = False,
 ) -> Series | Expr:
     """
@@ -765,10 +756,6 @@ def datetime_range(
         dates to valid ranges.
     closed : {'both', 'left', 'right', 'none'}
         Define which sides of the range are closed (inclusive).
-    time_unit : {None, 'ns', 'us', 'ms'}
-        Time unit of the resulting ``Datetime`` data type.
-    time_zone
-        Time zone of the resulting ``Datetime`` data type.
     eager
         Evaluate immediately and return a ``Series``.
         If set to ``False`` (default), return an expression instead.
@@ -780,16 +767,10 @@ def datetime_range(
 
     """
     interval = _parse_interval_argument(interval)
-    if time_unit is None and "ns" in interval:
-        time_unit = "ns"
-
     start_pyexpr = parse_as_expression(start)
     end_pyexpr = parse_as_expression(end)
-    result = wrap_expr(
-        plr.datetime_range(
-            start_pyexpr, end_pyexpr, interval, closed, time_unit, time_zone
-        )
-    )
+
+    result = wrap_expr(plr.datetime_range(start_pyexpr, end_pyexpr, interval, closed))
 
     if eager:
         return F.select(result).to_series()
@@ -804,8 +785,6 @@ def datetime_ranges(
     interval: str | timedelta = ...,
     *,
     closed: ClosedInterval = ...,
-    time_unit: TimeUnit | None = ...,
-    time_zone: str | None = ...,
     eager: Literal[False] = ...,
 ) -> Expr:
     ...
@@ -818,8 +797,6 @@ def datetime_ranges(
     interval: str | timedelta = ...,
     *,
     closed: ClosedInterval = ...,
-    time_unit: TimeUnit | None = ...,
-    time_zone: str | None = ...,
     eager: Literal[True],
 ) -> Series:
     ...
@@ -832,8 +809,6 @@ def datetime_ranges(
     interval: str | timedelta = ...,
     *,
     closed: ClosedInterval = ...,
-    time_unit: TimeUnit | None = ...,
-    time_zone: str | None = ...,
     eager: bool,
 ) -> Series | Expr:
     ...
@@ -845,8 +820,6 @@ def datetime_ranges(
     interval: str | timedelta = "1d",
     *,
     closed: ClosedInterval = "both",
-    time_unit: TimeUnit | None = None,
-    time_zone: str | None = None,
     eager: bool = False,
 ) -> Series | Expr:
     """
@@ -866,10 +839,6 @@ def datetime_ranges(
         dates to valid ranges.
     closed : {'both', 'left', 'right', 'none'}
         Define which sides of the range are closed (inclusive).
-    time_unit : {None, 'ns', 'us', 'ms'}
-        Time unit of the resulting ``Datetime`` data type.
-    time_zone
-        Time zone of the resulting ``Datetime`` data type.
     eager
         Evaluate immediately and return a ``Series``.
         If set to ``False`` (default), return an expression instead.
@@ -881,17 +850,10 @@ def datetime_ranges(
 
     """
     interval = _parse_interval_argument(interval)
-    if time_unit is None and "ns" in interval:
-        time_unit = "ns"
-
     start_pyexpr = parse_as_expression(start)
     end_pyexpr = parse_as_expression(end)
 
-    result = wrap_expr(
-        plr.datetime_ranges(
-            start_pyexpr, end_pyexpr, interval, closed, time_unit, time_zone
-        )
-    )
+    result = wrap_expr(plr.datetime_ranges(start_pyexpr, end_pyexpr, interval, closed))
 
     if eager:
         return F.select(result).to_series()
