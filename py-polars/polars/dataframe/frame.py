@@ -126,6 +126,7 @@ if TYPE_CHECKING:
         ComparisonOperator,
         ConditionalFormatDict,
         CsvEncoding,
+        CsvQuoteStyle,
         DbWriteEngine,
         DbWriteMode,
         FillNullStrategy,
@@ -675,6 +676,7 @@ class DataFrame:
         row_count_offset: int = 0,
         sample_size: int = 1024,
         eol_char: str = "\n",
+        raise_if_empty: bool = True,
     ) -> DataFrame:
         """
         Read a CSV file into a DataFrame.
@@ -744,6 +746,7 @@ class DataFrame:
                 row_count_name=row_count_name,
                 row_count_offset=row_count_offset,
                 eol_char=eol_char,
+                raise_if_empty=raise_if_empty,
             )
             if columns is None:
                 return scan.collect()
@@ -784,6 +787,7 @@ class DataFrame:
             _prepare_row_count_args(row_count_name, row_count_offset),
             sample_size=sample_size,
             eol_char=eol_char,
+            raise_if_empty=raise_if_empty,
         )
         return self
 
@@ -872,7 +876,9 @@ class DataFrame:
         Parameters
         ----------
         source
-            Path to a file or a file-like object.
+            Path to a file or a file-like object (by file-like object, we refer to
+            objects that have a ``read()`` method, such as a file handler (e.g.
+            via builtin ``open`` function) or ``BytesIO``).
         columns
             Columns.
         n_rows
@@ -906,7 +912,9 @@ class DataFrame:
         Parameters
         ----------
         source
-            Path to a file or a file-like object.
+            Path to a file or a file-like object (by file-like object, we refer to
+            objects that have a ``read()`` method, such as a file handler (e.g.
+            via builtin ``open`` function) or ``BytesIO``).
         columns
             Columns to select. Accepts a list of column indices (starting at zero) or a
             list of column names.
@@ -2377,6 +2385,7 @@ class DataFrame:
         time_format: str | None = ...,
         float_precision: int | None = ...,
         null_value: str | None = ...,
+        quote_style: CsvQuoteStyle | None = ...,
     ) -> str:
         ...
 
@@ -2395,6 +2404,7 @@ class DataFrame:
         time_format: str | None = ...,
         float_precision: int | None = ...,
         null_value: str | None = ...,
+        quote_style: CsvQuoteStyle | None = ...,
     ) -> None:
         ...
 
@@ -2412,6 +2422,7 @@ class DataFrame:
         time_format: str | None = None,
         float_precision: int | None = None,
         null_value: str | None = None,
+        quote_style: CsvQuoteStyle | None = None,
     ) -> str | None:
         """
         Write to comma-separated values (CSV) file.
@@ -2450,6 +2461,20 @@ class DataFrame:
             ``Float64`` datatypes.
         null_value
             A string representing null values (defaulting to the empty string).
+        quote_style : {'necessary', 'always', 'non_numeric'}
+            Determines the quoting strategy used.
+            - necessary (default): This puts quotes around fields only when necessary.
+            They are necessary when fields contain a quote,
+            delimiter or record terminator.
+            Quotes are also necessary when writing an empty record
+            (which is indistinguishable from a record with one empty field).
+            This is the default.
+            - always: This puts quotes around every field. Always.
+            - non_numeric: This puts quotes around all fields that are non-numeric.
+            Namely, when writing a field that does not parse as a valid float
+            or integer, then quotes will be used even if they aren`t strictly
+            necessary.
+
 
         Examples
         --------
@@ -2494,6 +2519,7 @@ class DataFrame:
             time_format,
             float_precision,
             null_value,
+            quote_style,
         )
 
         if should_return_buffer:
@@ -3171,7 +3197,7 @@ class DataFrame:
             compression = "uncompressed"
         if isinstance(file, (str, Path)):
             if pyarrow_options is not None and pyarrow_options.get("partition_cols"):
-                file = normalise_filepath(file, check_not_directory=True)
+                file = normalise_filepath(file, check_not_directory=False)
             else:
                 file = normalise_filepath(file)
 
