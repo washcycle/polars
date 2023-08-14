@@ -252,7 +252,7 @@ class Series:
             and py_type_to_dtype(dtype, raise_unmatched=False) is None
         ):
             raise ValueError(
-                f"given dtype: '{dtype!r}' is not a valid Polars data type and cannot be converted into one"
+                f"given dtype: {dtype!r} is not a valid Polars data type and cannot be converted into one"
             )
 
         # Handle case where values are passed as the first argument
@@ -427,8 +427,8 @@ class Series:
     def __bool__(self) -> NoReturn:
         raise ValueError(
             "the truth value of a Series is ambiguous. Hint: use '&' or '|' to chain"
-            "\n\nSeries boolean results together, not and/or; to check if a Series"
-            "\n\ncontains any values, use 'is_empty()'"
+            " Series boolean results together, not and/or; to check if a Series"
+            " contains any values, use 'is_empty()'"
         )
 
     def __getstate__(self) -> Any:
@@ -678,7 +678,7 @@ class Series:
         if f is None:
             raise ValueError(
                 f"cannot do arithmetic with series of dtype: {self.dtype} and argument"
-                f"\n\nof type: {type(other).__name__!r}"
+                f" of type: {type(other).__name__!r}"
             )
         return self._from_pyseries(f(other))
 
@@ -997,7 +997,7 @@ class Series:
 
         raise ValueError(
             f"cannot __getitem__ on Series of dtype: '{self.dtype!r}'"
-            f"\n\nwith argument: '{item!r}' of type: '{type(item).__name__!r}'"
+            f" with argument: {item!r} of type: {type(item).__name__!r}"
         )
 
     def __setitem__(
@@ -1015,7 +1015,7 @@ class Series:
                 return None
             raise ValueError(
                 f"cannot set Series of dtype: {self.dtype!r} with list/tuple as value;"
-                "\n\nuse a scalar value"
+                " use a scalar value"
             )
         if isinstance(key, Series):
             if key.dtype == Boolean:
@@ -1078,7 +1078,9 @@ class Series:
                 elif isinstance(arg, Series):
                     args.append(arg.view(ignore_nulls=True))
                 else:
-                    raise ValueError(f"unsupported type {type(arg).__name__!r} for {arg!r}")
+                    raise ValueError(
+                        f"unsupported type {type(arg).__name__!r} for {arg!r}"
+                    )
 
             # Get minimum dtype needed to be able to cast all input arguments to the
             # same dtype.
@@ -1160,7 +1162,7 @@ class Series:
         if row is None and len(self) != 1:
             raise ValueError(
                 f"can only call '.item()' if the series is of length 1, or an"
-                f"\n\nexplicit row index is provided (series is of length {len(self)})"
+                f" explicit row index is provided (series is of length {len(self)})"
             )
         return self[row or 0]
 
